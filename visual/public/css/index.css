@@ -1,0 +1,10 @@
+.pie{
+	width: 80%;
+	margin: auto;
+	background-color: rgb(242,242,242);
+}
+.title{
+	text-align: center;
+	font-size: 30px;
+	margin: auto;
+}
