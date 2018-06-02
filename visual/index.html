@@ -9,12 +9,14 @@
 </head>
 <body>
 	<div id="canvas-holder" class='pie'>
-		<p class="title">Packages Count</p>
-        <canvas id="chart-area" />
+        <canvas id="pie" />
+    </div>
+	<div id="canvas-holder" class='pie'>
+        <canvas id="bar" />
     </div>
 </body>
 <script type="text/javascript">
-	var color = ['rgb(255,99,132)', 'rgb(255,159,64)', 'rgb(255,205,86)', 'rgb(75,192,192)', 'rgb(54,162,235)', 'rgb(153,102,255)', 'rgb(201,203,207)'];
+	var color = ['rgb(255,99,132)', 'rgb(255,159,64)', 'rgb(255,205,86)', 'rgb(75,192,192)', 'rgb(153,102,255)'];
     window.onload = function() {
 		$.get('/GetPackages', function(data){
 			var config = {
@@ -28,15 +30,88 @@
 					],
 				},
 				options: {
+					onClick: function(event, res){
+						window.location.href = "./detail?Package="+res[0]._model.label;
+					},
+					title: {
+						fontSize: 30,
+						display: true,
+						text: "PHP bugs 10 main parts"
+					},
 				}
 	        }
 	        for (var i=0; i<Math.min(data.length, 20); i++){
 	        	config['data']['datasets'][0]['data'].push(data[i]['count']);
-	        	config['data']['datasets'][0]['backgroundColor'].push(color[i%7]);
+	        	config['data']['datasets'][0]['backgroundColor'].push(color[i%5]);
 	        	config['data']['labels'].push(data[i]['_id']);
 	        }
-	        console.log(config);
-	        var ctx = document.getElementById("chart-area").getContext("2d");
+	        // console.log(config);
+	        var ctx = document.getElementById("pie").getContext("2d");
+			window.myPie = new Chart(ctx, config);
+
+		});
+		$.get('/Timestamp', function(data){
+			// console.log(data);
+			var color = Chart.helpers.color;
+			var config = {
+				type: 'bar',
+				data: {
+					labels: [],
+					datasets: [{
+						label: 'count',
+						backgroundColor: window.chartColors.blue,
+						stack: 'count',
+						data: []
+					}]
+				},
+				options: {
+					onClick: function(event, res){
+						window.location.href = "./detail?Date="+res[0]._model.label;
+					},
+					legend: {
+						display: false,
+					},
+					title: {
+						fontSize: 30,
+						display: true,
+						text: "PHP bugs monthly"
+					},
+					tooltips: {
+						mode: 'index',
+						intersect: false
+					},
+					responsive: true,
+					scales: {
+						xAxes: [{
+							stacked: true,
+						}],
+						yAxes: [{
+							stacked: true,
+						}]
+					}
+				}
+			};
+			var year=data[0]._id.year, month=data[0]._id.month;
+			for (var i=0;i<data.length;i++){
+				while(year!=data[i]._id.year || month!=data[i]._id.month){
+					config.data.labels.push(year + (month>9?'-':'-0') + month);
+					config.data.datasets[0].data.push(0);
+					month ++;
+					if (month == 13) {
+						year ++;
+						month = 1;
+					}
+				}
+				config.data.labels.push(year + (month>9?'-':'-0') + month);
+				config.data.datasets[0].data.push(data[i].count);
+				month ++;
+				if (month == 13) {
+					year ++;
+					month = 1;
+				}
+			}
+			// console.log(config);
+			var ctx = document.getElementById("bar").getContext("2d");
 			window.myPie = new Chart(ctx, config);
 		});
     };
